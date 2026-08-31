@@ -1,0 +1,37 @@
+/* Give the A4 preview enough space to be readable alongside the editor. */
+.editor-layout {
+  grid-template-columns: minmax(500px, 1fr) 602px;
+}
+
+.preview-wrap {
+  width: 602px;
+}
+
+.preview-wrap .invoice-paper {
+  zoom: 1.18;
+}
+
+.invoice-paper.pdf-capture {
+  zoom: 1 !important;
+  font-family: "Yu Gothic UI", "Meiryo UI", Meiryo, sans-serif !important;
+}
+
+.invoice-paper.pdf-capture :is(.recipient, .issuer, .greeting, .subject, .amount-box, table, .summary, .invoice-footer) {
+  letter-spacing: 0 !important;
+  word-spacing: 0 !important;
+  font-kerning: none;
+}
+
+@media (max-width: 1250px) {
+  .editor-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .preview-wrap {
+    width: 100%;
+  }
+
+  .preview-wrap .invoice-paper {
+    zoom: 1;
+  }
+}

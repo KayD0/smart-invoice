@@ -1,0 +1,78 @@
+.entity-choice {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 4px;
+  margin-bottom: 20px;
+  padding: 4px;
+  border: 1px solid #d7dfdc;
+  border-radius: 9px;
+  background: #f6f8f7;
+}
+
+.entity-choice button {
+  border: 0;
+  border-radius: 7px;
+  padding: 10px 14px;
+  color: #6d7975;
+  background: transparent;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.entity-choice button.active {
+  color: #174f3f;
+  background: #fff;
+  box-shadow: 0 2px 8px #173c3020;
+}
+
+.settings-entity {
+  margin-top: -8px;
+}
+
+.issuer-type-label {
+  display: block;
+  margin: -5px 0 7px;
+  color: #596862;
+  font-size: 10px;
+  font-weight: 600;
+}
+
+.invoice-entity {
+  max-width: 420px;
+  margin-bottom: 18px;
+}
+
+.settings-help {
+  margin: -8px 0 20px;
+  color: #72807b;
+  font-size: 11px;
+  line-height: 1.7;
+}
+
+.entity-badge {
+  display: inline-block;
+  margin-right: 7px;
+  padding: 2px 6px;
+  border-radius: 10px;
+  color: #28614f;
+  background: #e7f1ed;
+  font-size: 8px;
+}
+
+input:disabled {
+  color: #66736e;
+  background: #f1f4f2;
+}
+
+.bank-fields {
+  margin-top: 4px;
+  padding-top: 17px;
+  border-top: 1px solid #e1e7e4;
+}
+
+.bank-fields > strong {
+  display: block;
+  margin-bottom: 12px;
+  color: #34453f;
+  font-size: 12px;
+}

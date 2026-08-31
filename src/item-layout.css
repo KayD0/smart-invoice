@@ -1,0 +1,26 @@
+.form-card:has(.item-row) {
+  position: relative;
+}
+
+.form-card:has(.item-row) .card-heading {
+  margin-bottom: 20px;
+}
+
+.form-card:has(.item-row) .item-row {
+  grid-template-columns: 22px minmax(150px, 1fr) 70px 100px 76px 76px 32px;
+  margin-bottom: 10px;
+}
+
+.form-card:has(.item-row) .item-row:last-of-type {
+  margin-bottom: 0;
+}
+
+.form-card:has(.item-row) .item-labels {
+  grid-template-columns: 22px minmax(150px, 1fr) 70px 100px 76px 76px 32px;
+  position: absolute;
+  top: 64px;
+  right: 23px;
+  left: 23px;
+  margin: 0;
+  transform: none;
+}
