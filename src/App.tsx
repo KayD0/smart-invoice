@@ -23,6 +23,8 @@ import "./App.css";
 import "./item-layout.css";
 import "./entity-type.css";
 import "./preview-layout.css";
+import "./brand.css";
+import appIcon from "../src-tauri/icons/icon.png";
 import { calculateInvoiceTotals, calculateLineAmounts, TaxMode, TaxRate } from "./domain/invoiceTotals";
 
 type Item = { id: string; name: string; quantity: number; unitPrice: number; taxRate: TaxRate; taxMode?: TaxMode };
@@ -198,7 +200,7 @@ function App() {
 
   return <div className="app-shell">
     <aside className="sidebar">
-      <div className="brand"><div className="brand-mark">S</div><div><strong>Smart Invoice</strong><span>かんたん請求書</span></div></div>
+      <div className="brand"><img className="brand-mark" src={appIcon} alt=""/><div><strong>Smart Invoice</strong><span>かんたん請求書</span></div></div>
       <nav>{nav.map(([key, Icon, label]) => <button key={key} className={view === key ? "active" : ""} onClick={() => setView(key)}><Icon size={19}/>{label}</button>)}</nav>
       <div className="sidebar-bottom"><div className="local-badge"><CheckCircle2 size={16}/><span>データはこのPC内に<br/>安全に保存されます</span></div><small>Smart Invoice v0.1.0</small></div>
     </aside>
