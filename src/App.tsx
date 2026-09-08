@@ -44,6 +44,8 @@ type Invoice = {
 type Business = {
   entityType: EntityType;
   name: string;
+  tradeName: string;
+  companyName: string;
   representative: string;
   postalCode: string;
   address: string;
@@ -71,6 +73,8 @@ const emptyItem = (): Item => ({ id: uid(), name: "", quantity: 1, unitPrice: 0,
 const defaultBusiness: Business = {
   entityType: "corporate",
   name: "山田デザイン事務所",
+  tradeName: "",
+  companyName: "山田デザイン事務所",
   representative: "山田 太郎",
   postalCode: "〒100-0001",
   address: "東京都千代田区千代田1-1",
@@ -123,7 +127,16 @@ function App() {
   const [view, setView] = useState<"dashboard" | "invoices" | "clients" | "settings" | "editor">("dashboard");
   const [clients, setClients] = useState<Client[]>(() => load<Client[]>("smart-invoice.clients", initialClients).map((client) => ({ ...client, entityType: client.entityType ?? "corporate" })));
   const [invoices, setInvoices] = useState<Invoice[]>(() => load("smart-invoice.invoices", []));
-  const [business, setBusiness] = useState<Business>(() => ({ ...defaultBusiness, ...load<Partial<Business>>("smart-invoice.business", {}) }));
+  const [business, setBusiness] = useState<Business>(() => {
+    const saved = load<Partial<Business>>("smart-invoice.business", {});
+    const legacyName = saved.name ?? defaultBusiness.name;
+    return {
+      ...defaultBusiness,
+      ...saved,
+      tradeName: saved.tradeName ?? (saved.entityType === "individual" ? legacyName : ""),
+      companyName: saved.companyName ?? (saved.entityType === "individual" ? "" : legacyName),
+    };
+  });
   const [editing, setEditing] = useState<Invoice>(() => newInvoice(1));
   const [toast, setToast] = useState("");
   const [exporting, setExporting] = useState(false);
@@ -229,7 +242,7 @@ function InvoicePreview({ invoice, client, business, invoiceRef }: { invoice: In
   ].filter(Boolean).join("\n");
   return <div className="invoice-paper" ref={invoiceRef}>
     <div className="invoice-head"><div><h2>請求書</h2></div><div className="invoice-meta"><b>{invoice.number}</b><span>発行日：{invoice.issueDate}</span></div></div>
-    <div className="invoice-parties"><div className="recipient"><h3>{client?.name || "請求先を選択"} <small>{client?.entityType === "individual" ? "様" : "御中"}</small></h3><span>{client?.postalCode}</span><span>{client?.address}</span>{client?.entityType === "corporate" && client.contact && <span>{client.contact}</span>}</div><div className="issuer"><strong>{invoice.issuerType === "individual" ? business.representative : business.name}</strong>{invoice.issuerType === "individual" ? business.name && <span>屋号 {business.name}</span> : business.representative && <span>代表 {business.representative}</span>}<span>{business.postalCode}</span><span>{business.address}</span><span>TEL {business.phone}</span><span>{business.email}</span>{business.registrationNumber && <span>登録番号 {business.registrationNumber}</span>}<Stamp business={business}/></div></div>
+    <div className="invoice-parties"><div className="recipient"><h3>{client?.name || "請求先を選択"} <small>{client?.entityType === "individual" ? "様" : "御中"}</small></h3><span>{client?.postalCode}</span><span>{client?.address}</span>{client?.entityType === "corporate" && client.contact && <span>{client.contact}</span>}</div><div className="issuer"><strong>{invoice.issuerType === "individual" ? business.representative : business.companyName}</strong>{invoice.issuerType === "individual" ? business.tradeName && <span>屋号 {business.tradeName}</span> : business.representative && <span>代表 {business.representative}</span>}<span>{business.postalCode}</span><span>{business.address}</span><span>TEL {business.phone}</span><span>{business.email}</span>{business.registrationNumber && <span>登録番号 {business.registrationNumber}</span>}<Stamp business={business}/></div></div>
     <p className="greeting">下記のとおりご請求申し上げます。</p>{invoice.subject && <p className="subject">件名：{invoice.subject}</p>}
     <div className="amount-box"><span>ご請求金額（税込）</span><strong>{yen(sum.total)}</strong><small>お支払期限　{invoice.dueDate}</small></div>
     <table><thead><tr><th>品目・サービス</th><th>数量</th><th>単価（税抜）</th><th>税率</th><th>金額（税抜）</th></tr></thead><tbody>{invoice.items.map((item) => { const line = calculateLineAmounts(item); const netUnitPrice = item.quantity > 0 ? Math.ceil(line.net / item.quantity) : 0; return <tr key={item.id}><td>{item.name || "（品目未入力）"}</td><td>{item.quantity}</td><td>{yen(netUnitPrice)}</td><td>{item.taxRate ? `${item.taxRate}%` : "非課税"}</td><td>{yen(line.net)}</td></tr>; })}</tbody></table>
@@ -261,8 +274,8 @@ function SettingsPage({ business, onChange, notify }: { business: Business; onCh
   const upload = (event: ChangeEvent<HTMLInputElement>) => { const file = event.target.files?.[0]; if (!file) return; const reader = new FileReader(); reader.onload = () => setDraft({...draft, stampImage: String(reader.result), stampMode: "image"}); reader.readAsDataURL(file); };
   return <section className="page settings-grid">
     <div className="panel form-card settings-card"><span className="eyebrow">BUSINESS</span><h2>請求元情報</h2>
-      <p className="settings-help">ここで登録した屋号・会社名と氏名を、請求書作成時に選んだ発行形態に合わせて表示します。</p>
-      <div className="form-grid"><label className="wide">屋号・会社名<input value={draft.name} onChange={(e) => setDraft({...draft, name: e.target.value})}/></label><label>氏名・代表者名<input value={draft.representative} onChange={(e) => setDraft({...draft, representative: e.target.value})}/></label><label>郵便番号<input value={draft.postalCode} onChange={(e) => setDraft({...draft, postalCode: e.target.value})}/></label><label className="wide">住所<input value={draft.address} onChange={(e) => setDraft({...draft, address: e.target.value})}/></label><label>電話番号<input value={draft.phone} onChange={(e) => setDraft({...draft, phone: e.target.value})}/></label><label>メールアドレス<input value={draft.email} onChange={(e) => setDraft({...draft, email: e.target.value})}/></label><label className="wide">適格請求書発行事業者 登録番号<input placeholder="T1234567890123" value={draft.registrationNumber} onChange={(e) => setDraft({...draft, registrationNumber: e.target.value})}/></label><div className="wide bank-fields"><strong>振込先</strong><div className="form-grid"><label>金融機関<input placeholder="三井住友銀行" value={draft.bankName} onChange={(e) => setDraft({...draft, bankName: e.target.value})}/></label><label>支店<input placeholder="本店営業部" value={draft.branchName} onChange={(e) => setDraft({...draft, branchName: e.target.value})}/></label><label>口座番号<input placeholder="普通 1234567" value={draft.accountNumber} onChange={(e) => setDraft({...draft, accountNumber: e.target.value})}/></label><label>名義<input placeholder="ヤマダ タロウ" value={draft.accountHolder} onChange={(e) => setDraft({...draft, accountHolder: e.target.value})}/></label></div></div></div>
+      <p className="settings-help">会社名と屋号は別々に登録できます。個人として発行する場合、屋号は任意です。</p>
+      <div className="form-grid"><label className="wide">会社名<input value={draft.companyName} onChange={(e) => setDraft({...draft, companyName: e.target.value})}/></label><label>氏名・代表者名<input value={draft.representative} onChange={(e) => setDraft({...draft, representative: e.target.value})}/></label><label>屋号（任意）<input placeholder="個人で屋号がある場合のみ" value={draft.tradeName} onChange={(e) => setDraft({...draft, tradeName: e.target.value})}/></label><label>郵便番号<input value={draft.postalCode} onChange={(e) => setDraft({...draft, postalCode: e.target.value})}/></label><label className="wide">住所<input value={draft.address} onChange={(e) => setDraft({...draft, address: e.target.value})}/></label><label>電話番号<input value={draft.phone} onChange={(e) => setDraft({...draft, phone: e.target.value})}/></label><label>メールアドレス<input value={draft.email} onChange={(e) => setDraft({...draft, email: e.target.value})}/></label><label className="wide">適格請求書発行事業者 登録番号<input placeholder="T1234567890123" value={draft.registrationNumber} onChange={(e) => setDraft({...draft, registrationNumber: e.target.value})}/></label><div className="wide bank-fields"><strong>振込先</strong><div className="form-grid"><label>金融機関<input placeholder="三井住友銀行" value={draft.bankName} onChange={(e) => setDraft({...draft, bankName: e.target.value})}/></label><label>支店<input placeholder="本店営業部" value={draft.branchName} onChange={(e) => setDraft({...draft, branchName: e.target.value})}/></label><label>口座番号<input placeholder="普通 1234567" value={draft.accountNumber} onChange={(e) => setDraft({...draft, accountNumber: e.target.value})}/></label><label>名義<input placeholder="ヤマダ タロウ" value={draft.accountHolder} onChange={(e) => setDraft({...draft, accountHolder: e.target.value})}/></label></div></div></div>
     </div>
     <div className="panel stamp-settings"><span className="eyebrow">STAMP</span><h2>印鑑プレビュー</h2><p>代表者名から印影を自動生成するか、お手持ちのPNG画像を登録できます。</p><div className="stamp-preview"><Stamp business={draft}/></div><div className="segment"><button className={draft.stampMode === "auto" ? "active" : ""} onClick={() => setDraft({...draft, stampMode: "auto"})}>自動生成</button><button className={draft.stampMode === "image" ? "active" : ""} disabled={!draft.stampImage} onClick={() => setDraft({...draft, stampMode: "image"})}>登録画像</button></div><label className="upload-button">PNG画像を選ぶ<input type="file" accept="image/png,image/jpeg" onChange={upload}/></label><button className="primary full" onClick={() => { onChange(draft); notify("事業者設定を保存しました"); }}><Save size={17}/>設定を保存</button><small className="legal-note">この印影は請求書上の表示用です。電子署名や本人認証の機能はありません。</small></div>
   </section>;
